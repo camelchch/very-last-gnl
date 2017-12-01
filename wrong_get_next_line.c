@@ -1,24 +1,26 @@
-/* ************************************************************************** */
-/*                                                                            */
+
 /*                                                        :::      ::::::::   */
-/*   get_next_line.c                                    :+:      :+:    :+:   */
+/*   ft_get_next_line.h                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: saxiao <marvin@42.fr>                      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2017/12/01 17:40:08 by saxiao            #+#    #+#             */
-/*   Updated: 2017/12/01 17:46:44 by saxiao           ###   ########.fr       */
+/*   Created: 2017/11/25 01:27:08 by saxiao            #+#    #+#             */
+/*   Updated: 2017/11/29 19:11:44 by saxiao           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
+#include <sys/types.h>
+#include <sys/uio.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include "get_next_line.h"
 #include "libft/libft.h"
 
-char	*ft_strcdup(char *s, char c)
+static	char	*ft_strcdup(char *s, char c)
 {
-	char *copy;
-	int	 i;
+	char	*copy;
+	int		i;
 
 	i = 0;
 	while (s[i] && s[i] != c)
@@ -53,10 +55,10 @@ static st_list		*add(st_list *list, int fd)
 
 static	st_list		*find(st_list *list, int fd)
 {
-	char		buff[BUFF_SIZE + 1];
-	int			ret;
-	char		*temp;
+	char	*temp;
 
+	if (!list)
+		list = add(list, fd);
 	while (fd != list->fd && list->next)
 		list = list->next;
 	if (fd != list->fd)
@@ -64,6 +66,21 @@ static	st_list		*find(st_list *list, int fd)
 		list = add(list, fd);
 		list = list->next;
 	}
+	return (list);
+}
+
+int		get_next_line(const int fd, char **line)
+{
+	static	st_list		*list = NULL;
+	char		buff[BUFF_SIZE + 1];
+	st_list		*begin;
+	char		*temp;
+	int			ret;
+
+	if (fd < 0 || BUFF_SIZE < 1 || read(fd, "", 0))
+		return (-1);
+	begin = list;
+	list = find(list, fd);
 	while ((ret = read(fd, buff, BUFF_SIZE)) > 0)
 	{
 		temp = list->stock;
@@ -73,21 +90,6 @@ static	st_list		*find(st_list *list, int fd)
 		if (ft_strchr(buff, '\n'))
 			break;
 	}
-	return (list);
-}
-
-int		get_next_line(const int fd, char **line)
-{
-	static	st_list		*list = NULL;
-	st_list		*begin;
-	char		*temp;
-
-	if(fd < 0 || BUFF_SIZE < 1 || read(fd, "", 0))
-		return (-1);
-	if (!list)
-		list = add(list, fd);
-	begin = list;
-	list = find(list, fd);
 	if (!(*(list->stock)))
 		return (0);
 	if (ft_strchr(list->stock, '\n'))

@@ -1,17 +1,19 @@
-/* ************************************************************************** */
-/*                                                                            */
+
 /*                                                        :::      ::::::::   */
-/*   get_next_line.c                                    :+:      :+:    :+:   */
+/*   ft_get_next_line.h                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: saxiao <marvin@42.fr>                      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2017/12/01 17:40:08 by saxiao            #+#    #+#             */
-/*   Updated: 2017/12/01 17:46:44 by saxiao           ###   ########.fr       */
+/*   Created: 2017/11/25 01:27:08 by saxiao            #+#    #+#             */
+/*   Updated: 2017/11/29 19:11:44 by saxiao           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
+#include <sys/types.h>
+#include <sys/uio.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include "get_next_line.h"
 #include "libft/libft.h"
 
@@ -21,11 +23,8 @@ char	*ft_strcdup(char *s, char c)
 	int	 i;
 
 	i = 0;
-	while (s[i] && s[i] != c)
-		i++;
-	if (!(copy = (char *)malloc(i + 1)))
+	if (!(copy = (char *)malloc(ft_strlen(s) + 1)))
 		return (NULL);
-	i = 0;
 	while (*s && *s != c)
 		copy[i++] = *s++;
 	copy[i] = '\0';
@@ -53,10 +52,6 @@ static st_list		*add(st_list *list, int fd)
 
 static	st_list		*find(st_list *list, int fd)
 {
-	char		buff[BUFF_SIZE + 1];
-	int			ret;
-	char		*temp;
-
 	while (fd != list->fd && list->next)
 		list = list->next;
 	if (fd != list->fd)
@@ -64,21 +59,14 @@ static	st_list		*find(st_list *list, int fd)
 		list = add(list, fd);
 		list = list->next;
 	}
-	while ((ret = read(fd, buff, BUFF_SIZE)) > 0)
-	{
-		temp = list->stock;
-		buff[ret] = '\0';
-		list->stock = ft_strjoin(list->stock, buff);
-		free(temp);
-		if (ft_strchr(buff, '\n'))
-			break;
-	}
 	return (list);
 }
 
 int		get_next_line(const int fd, char **line)
 {
 	static	st_list		*list = NULL;
+	char		buff[BUFF_SIZE + 1];
+	int			ret;
 	st_list		*begin;
 	char		*temp;
 
@@ -88,6 +76,15 @@ int		get_next_line(const int fd, char **line)
 		list = add(list, fd);
 	begin = list;
 	list = find(list, fd);
+	while ((ret = read(fd, buff, BUFF_SIZE)) > 0)
+	{
+		temp = list->stock;
+		buff[ret] = '\0';
+		list->stock = ft_strjoin(list->stock, buff);
+		free(temp);
+		if (ft_strchr(buff, '\n'))
+			break;
+	}
 	if (!(*(list->stock)))
 		return (0);
 	if (ft_strchr(list->stock, '\n'))
@@ -105,3 +102,49 @@ int		get_next_line(const int fd, char **line)
 	list = begin;
 	return (1);
 }
+/*
+#include <fcntl.h>
+
+int main(int ac, char **av)
+{
+	char *line;
+	int		fd1;
+	int		fd2;
+	(void) ac++;
+	(void) av;
+
+	fd1 = open("1file", O_RDONLY);
+	fd2 = open("2file", O_RDONLY);
+	while (get_next_line(fd1,&line))
+	{
+		ft_putendl(line);
+		free(line);
+		line = NULL;
+	}
+	get_next_line(fd1 ,&line);
+	//ft_putendl("main here");
+		ft_putendl(line);
+	get_next_line(fd2 ,&line);
+	//ft_putendl("main here");
+		ft_putendl(line);
+	get_next_line(fd1 ,&line);
+	//ft_putendl("main here");
+		ft_putendl(line);
+	get_next_line(fd2 ,&line);
+//	ft_putendl("main here");
+		ft_putendl(line);
+	get_next_line(fd1 ,&line);
+//	ft_putendl("main here");
+		ft_putendl(line);
+	get_next_line(fd2 ,&line);
+//	ft_putendl("main here");
+		ft_putendl(line);
+	get_next_line(fd1 ,&line);
+//	ft_putendl("main here");
+		ft_putendl(line);
+	get_next_line(fd2 ,&line);
+//	ft_putendl("main here");
+		ft_putendl(line);
+	return (0);
+}
+*/
